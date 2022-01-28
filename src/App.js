@@ -8,18 +8,35 @@ const accessKey = process.env.REACT_APP_UNSLASH_ACCESS_KEY;
 export const App = () => {
   const [images, setImages] = useState([]);
   const [page, setPage] = useState(1);
+  const [query, setQuery] = useState('');
 
-  const fetchImages = async () => {
-    const res = await fetch(
-      `https://api.unsplash.com/photos/?client_id=${accessKey}&page=${page}`
-    );
+  const getPhotos = async () => {
+    let apiUrl = `https://api.unsplash.com/photos?`;
+    if (query) apiUrl = `https://api.unsplash.com/search/photos?query=${query}`;
+
+    apiUrl += `&page=${page}`;
+    apiUrl += `&client_id=${accessKey}`;
+
+    const res = await fetch(apiUrl);
     const data = await res.json();
 
-    setImages((prevImages) => [...prevImages, ...data]);
+    const imagesFromApi = data.results ?? data;
+
+    // if page is 1, then we need a whole new array of images
+    if (page === 1) setImages(imagesFromApi);
+
+    // if page > 1, then we are adding for our infinite scroll
+    setImages((prevImages) => [...prevImages, ...imagesFromApi]);
+  };
+
+  const searchPhotos = async (e) => {
+    e.preventDefault();
+    setPage(1);
+    getPhotos();
   };
 
   useEffect(() => {
-    fetchImages();
+    getPhotos();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
@@ -35,8 +52,12 @@ export const App = () => {
     <div className="app">
       <h1>Unsplash Image Gallery!</h1>
 
-      <form>
-        <input type="text" placeholder="Search Unsplash..." />
+      <form onSubmit={searchPhotos}>
+        <input
+          onChange={(e) => setQuery(e.target.value)}
+          type="text"
+          placeholder="Search Unsplash..."
+        />
         <button>Search</button>
       </form>
 
