@@ -37,6 +37,7 @@ export const App = () => {
 
   useEffect(() => {
     getPhotos();
+    // may use useCallback
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
